@@ -46,5 +46,24 @@ def plotDetection( xpos, nvec, xtraj, ytraj, track, camera,
         plt.fill( xcam, ycam, 'g', alpha=0.25)
         plt.plot( xcones[vis,0], xcones[vis,1], 'ro' )
 
+    # plot car
+    xcar, ycar = carOutline( xcar = xpos, nvec = nvec, scl = 2. )
+    plt.fill( xcar, ycar, 'k')
+
     plt.axis('equal')
     plt.show()
+
+def carOutline( xcar = np.array([0.,0.]),
+                scl = 1., nvec = np.array([1.,0.]) ):
+
+    x = scl * np.array( [-0.5,-0.5,-0.25,-0.25,-0.5,-0.5,
+                          0.5, 0.5, 0.25, 0.25, 0.5, 0.5] ) * 0.7
+    y = scl * np.array( [ 0.5, 0.3, 0.3,-0.3,-0.3,-0.5,
+                         -0.5,-0.3,-0.3, 0.3, 0.3, 0.5] )
+
+    tvec = np.array( [nvec[1],-nvec[0]])
+
+    xc = xcar[0] + y * nvec[0] + x * tvec[0]
+    yc = xcar[1] + y * nvec[1] + x * tvec[1]
+
+    return (xc,yc)

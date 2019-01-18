@@ -9,14 +9,14 @@ from planning import *
 datdict = np.load('track1.npy').item()
 track   = datdict['track']
 
-camera = FOV( rad = 5., distcent = 6. )
+camera = FOV( rad = 7., distcent = 3 )
 
 x0   = np.array([0.,0.])
-nvec = np.array([1.,0.])
+nvec = np.array([-1.,0.])
 xtraj, detCones = planTrajectory( track, camera, x0 = x0,
-                                  nvec0 = nvec,
-                                  ds = 0.25, dscone = 0.25, smax = 30.,
-                                  sigma = 1., l = 5. )
+                                  nvec0 = nvec, sdetectmax = 10.,
+                                  ds = .5, smax = 150., rmin=1.,
+                                  sigmabar = 0.15, alpha = 0.05 )#1 )
 
 ind = np.shape(xtraj)[0]-1
 xplot = xtraj[ind,:]

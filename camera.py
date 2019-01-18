@@ -7,7 +7,10 @@ class FOV:
 
         self.rad      = rad
         self.distcent = distcent
-        self.beta     = asin( rad / distcent )
+        self.cone     = self.distcent > self.rad
+        self.beta     = pi
+        if self.cone:
+            self.beta = asin( rad / distcent )
 
 
     def checkVisible( self, xpts, nvec, xpos ):
@@ -26,10 +29,12 @@ class FOV:
         npts = np.shape( xpts )[0]
 
         tvec = np.array( [ nvec[1], nvec[0] ] )
-        l = sqrt( self.distcent**2 - self.rad**2 )
+        l = 0.; x1 = np.array( [0.,0.] ); x2 = np.array( [0.,0.] )
 
-        x1 = xpos + nvec * l * cos(self.beta) + tvec * l * sin(self.beta)
-        x2 = xpos + nvec * l * cos(self.beta) - tvec * l * sin(self.beta)
+        if self.cone:
+            l   = sqrt( self.distcent**2 - self.rad**2 )
+            x1 += xpos + nvec * l * cos(self.beta) + tvec * l * sin(self.beta)
+            x2 += xpos + nvec * l * cos(self.beta) - tvec * l * sin(self.beta)
 
         for jj in range(0,npts):
 
@@ -44,6 +49,8 @@ class FOV:
 
             # then check if between ball and car (the cone if you will)
             #   compute area of triangle comprised of (x1,x2,xpos)
+            if not self.cone:
+                continue
             v1 = x1 - xpos; v2 = x2 - xpos
             Atriang = abs( 0.5 * (  v1[0]*v2[1] - v1[1]*v2[0] ) )
 
@@ -67,8 +74,6 @@ class FOV:
 
         tvec = np.array( [ nvec[1], nvec[0] ] )
 
-        l = sqrt( self.distcent**2 - self.rad**2 )
-
         nplot = 50
 
         alpha = pi/2 - self.beta
@@ -84,7 +89,12 @@ class FOV:
             xpl[jj] =  xloc * tvec[0] + yloc * nvec[0]
             ypl[jj] = -xloc * tvec[1] + yloc * nvec[1]
 
+
         xpl += xpos[0]
         ypl += xpos[1]
+        
+        if not self.cone:
+            xpl[0]  = xpl[1]
+            xpl[-1] = xpl[-2]
 
         return (xpl,ypl)
