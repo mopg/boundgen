@@ -2,6 +2,9 @@ import numpy as np
 from math import *
 from trackgen import *
 
+# Example of a track that is used for planning. The track is saved in a pickle
+# for easy access later.
+
 # Where are the corners?
 crns = np.array( [False,True,True,False,True,True,True,False,True,True,False], dtype=bool )
 

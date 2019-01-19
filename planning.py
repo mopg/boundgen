@@ -5,7 +5,28 @@ from camera import *
 def planTrajectory( track, camera, x0 = np.array([0.,0.]),
                     nvec0 = np.array([1.,0.]),
                     ds = 0.1, rmin=5., smax = 1e9,
-                    sigmabar = 0.5, alpha = 0.5, sdetectmax = 5. ):
+                    sigmabar = 0.5, alpha = 0.5, sdetectmax = 5.,
+                    Pcolcorr = 0.7,
+                    nsamples = 25 ):
+
+    '''
+        Plans a trajectory starting from 'x0'. In this algorithm detection and
+        planning happen at the same time. The car finds the 'most likely path'
+        through the cones.
+            - track:        track with cones
+            - camera:       camera class that determines Field of View
+            - x0:           initial position
+            - nvec0:        initial heading
+            - ds:           distance step
+            - rmin:         minimum turning radius used in planning
+            - smax:         maximum distance car can traverse
+            - sigmabar:     standard deviation of cone position for cones next to car
+            - alpha:        growth rate for standard deviation
+            - sdetectmax:   maximum distance between cone and car for the cone
+                            to be used in planning
+            - Pcolcorr:     Probability that color detection is accurate
+            - nsamples:     Number of trial trajectories for each planning step
+    '''
 
     x    = x0.copy()
     nvec = nvec0.copy()
@@ -25,6 +46,10 @@ def planTrajectory( track, camera, x0 = np.array([0.,0.]),
 
     detCones = np.zeros( (ncones,) , dtype=bool )
 
+    # color of cones
+    rightCones = np.hstack( ( np.zeros( (len(track.xc1),), dtype=bool ),
+                              np.ones(  (len(track.xc2),), dtype=bool ) ) )
+
     # Always start with the two cones next to the starting point (get those for free)
     detCones[-1] = True
     detCones[len(track.xc1)-1] = True
@@ -42,18 +67,15 @@ def planTrajectory( track, camera, x0 = np.array([0.,0.]),
         tvec = np.array( [-nvec[1],nvec[0]] )
 
         # generate paths using different inverse radii
-        npts  = 25
-        nns   = np.linspace( -1./rmin, 1./rmin, npts )
-        probs = np.zeros( (npts,) )
+        nns   = np.linspace( -1./rmin, 1./rmin, nsamples )
+        fobjs = np.zeros( (nsamples,) )
 
-        for ii in range(0,npts):
+        for ii in range(0,nsamples):
 
             ns = nns[ii]
 
-            # print("ns ", nns[ii])
-
             if abs(ns) < 1e-5:
-                r = 15. # random number -- will get fixed later
+                r = 15. # random number -- will get fixed further down
             else:
                 r = 1./ns
 
@@ -71,7 +93,7 @@ def planTrajectory( track, camera, x0 = np.array([0.,0.]),
                 if np.dot( vtemp, nvec ) < 0.:
                     continue
 
-                rcone = abs( abs(r) - np.linalg.norm( xcone - xcenter ) )
+                rcone = ( abs(r) - np.linalg.norm( xcone - xcenter ) ) * np.sign( ns )
 
                 v1 = xcone - xcenter
                 v2 = x - xcenter
@@ -82,46 +104,31 @@ def planTrajectory( track, camera, x0 = np.array([0.,0.]),
                 if abs(ns) < 1e-5:
                     v1    = xcone - x
                     s     = np.dot( v1, nvec )
-                    rcone = np.linalg.norm( v1 - np.dot(v1,nvec) * nvec )
+                    rcone = np.linalg.norm( v1 - np.dot(v1,nvec) * nvec ) * np.sign( np.dot( v1, tvec ) )
 
+                # if cone too far away, skip
                 if s > sdetectmax:
                     continue
 
-                # print(" icone ", icone)
-                # print("     v1 ", v1)
-                # print("     v2 ", v2)
-                # print("     xcenter ", xcenter)
-                # print("     xcone ", xcone)
-                # print("     s ", s)
-                # print("     rcone ", rcone)
-                # print(" - (log(rcone) - log(mu))**2 ", - (log(rcone) - log(mu))**2 )
-
-
-                # log likelihood
                 sigma = sigmabar * exp(alpha*s)
-                logprob  = - log(rcone) - log(sigma*2*pi) - (log(rcone) - log(mu))**2 / (2*sigma**2)
-                probs[ii] += logprob
+                prob  = 0.
+                if rightCones[icone]:
+                    prob += 1/sqrt(2*pi*sigma**2) * exp( - (rcone-mu)**2/(2*sigma**2) ) * Pcolcorr \
+                         +  1/sqrt(2*pi*sigma**2) * exp( - (rcone+mu)**2/(2*sigma**2) ) * (1-Pcolcorr)
+                else:
+                    prob += 1/sqrt(2*pi*sigma**2) * exp( - (rcone-mu)**2/(2*sigma**2) ) * (1-Pcolcorr) \
+                         +  1/sqrt(2*pi*sigma**2) * exp( - (rcone+mu)**2/(2*sigma**2) ) * Pcolcorr
 
-                prob = 1/rcone * 1/(sigma*sqrt(2*pi)) * exp( - (log(rcone) - log(mu))**2 / (2*sigma**2) )
+                fobjs[ii] += prob
 
-                # print("     sigma ", sigma )
-                # print("     logprob  ", logprob )
-                # print("     prob ", prob)
-
-        # find maximum likelihood
-        imax = np.argmax( probs )
-
+        # find maximum objective value
+        imax = np.argmax( fobjs )
         nsmax = nns[imax]
-        # print("     nns ", nns)
-        # print("     probs ", probs)
-        # print("     nsmax ", nsmax)
 
         # update position and heading
         theta = ds*nsmax
         Tmat  = np.array( ( [cos(theta),-sin(theta)],
                             [sin(theta), cos(theta)] ) )
-
-        # x   += ds * nvec
 
         if abs(nsmax) < 1e-5:
             # straight line

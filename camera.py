@@ -2,6 +2,17 @@ from math import *
 import numpy as np
 
 class FOV:
+    '''
+        Camera/FOV object holds all parameters defining the field of view of
+        the car, which determines which cones will get detected.
+        The assumed shape is a circle with a cone attached to it.
+
+        Attributes:
+            rad         radius of FOV
+            distcent    distance between car center and center of FOV circle
+            cone        check whether cone is necessary or whether circle includes car (computed)
+            beta        angle between circle and car (computed)
+    '''
 
     def __init__( self, rad = 5., distcent = 8. ):
 
@@ -14,6 +25,9 @@ class FOV:
 
 
     def checkVisible( self, xpts, nvec, xpos ):
+        '''
+            Checks which cones are visible. Returns Boolean array.
+        '''
 
         npts = np.shape( xpts )[0]
 
@@ -25,6 +39,9 @@ class FOV:
 
 
     def checkVisibleMem( self, xpts, nvec, xpos, vis ):
+        '''
+            Checks which cones are visible. Modifies the 'vis' Boolean array in-place.
+        '''
 
         npts = np.shape( xpts )[0]
 
@@ -71,6 +88,9 @@ class FOV:
         return vis
 
     def getOutline( self, nvec, xpos ):
+        '''
+            Gets outline of visible area. Only used for plotting.
+        '''
 
         tvec = np.array( [ nvec[1], nvec[0] ] )
 
@@ -92,7 +112,7 @@ class FOV:
 
         xpl += xpos[0]
         ypl += xpos[1]
-        
+
         if not self.cone:
             xpl[0]  = xpl[1]
             xpl[-1] = xpl[-2]
