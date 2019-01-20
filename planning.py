@@ -1,5 +1,4 @@
 import numpy as np
-from GP import *
 from camera import *
 
 def planTrajectory( track, camera, x0 = np.array([0.,0.]),
