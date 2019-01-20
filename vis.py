@@ -78,7 +78,8 @@ def carOutline( xcar = np.array([0.,0.]),
 
     return (xc,yc)
 
-def animateDetection( xtraj, ytraj, track, camera, output=True ):
+def animateDetection( xtraj, ytraj, track, camera, output=True,
+                      filename="img/track1.gif" ):
     '''
         Animates the detection process (after the fact,
         so active cones are re-computed).
@@ -177,6 +178,6 @@ def animateDetection( xtraj, ytraj, track, camera, output=True ):
                                    frames=len(xtraj)-1, interval=10, blit=True)
 
     if output:
-        anim.save("track.gif", fps=30)
+        anim.save(filename, fps=30)
 
     plt.show()
