@@ -27,4 +27,4 @@ Several hyperparameters can be tuned to get better results. The algorithm seems 
 
 ## Example of planning and detection
 
-<img src="img/track1.gif" alt="Example of planning and detection" width="225">
+<img src="img/track1.gif" alt="Example of planning and detection" width="500">
