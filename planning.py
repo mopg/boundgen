@@ -6,7 +6,10 @@ def planTrajectory( track, camera, x0 = np.array([0.,0.]),
                     ds = 0.1, rmin=5., smax = 1e9,
                     sigmabar = 0.5, alpha = 0.5, sdetectmax = 5.,
                     Pcolcorr = 0.7,
-                    nsamples = 25 ):
+                    nsamples = 25,
+                    xfcones = np.zeros( (0,) ),
+                    yfcones = np.zeros( (0,) ),
+                    rfcones = np.zeros( (0,), dtype=bool ) ):
 
     '''
         Plans a trajectory starting from 'x0'. In this algorithm detection and
@@ -25,6 +28,9 @@ def planTrajectory( track, camera, x0 = np.array([0.,0.]),
                             to be used in planning
             - Pcolcorr:     Probability that color detection is accurate
             - nsamples:     Number of trial trajectories for each planning step
+            - xfcones:      x-coordinates of stationary false cone detections
+            - yfcones:      y-coordinates of stationary false cone detections
+            - rfcones:      are stationary cones detected as right (true) or left (false) cones?
     '''
 
     x    = x0.copy()
@@ -37,9 +43,9 @@ def planTrajectory( track, camera, x0 = np.array([0.,0.]),
     mu = track.width/2
 
     # initialize cone array
-    ncones = len(track.xc1) + len(track.xc2)
-    xcones = np.vstack( ( np.hstack( (track.xc1, track.xc2) ),
-                          np.hstack( (track.yc1, track.yc2) ) ) )
+    ncones = len(track.xc1) + len(track.xc2) + len(xfcones)
+    xcones = np.vstack( ( np.hstack( (track.xc1, track.xc2, xfcones) ),
+                          np.hstack( (track.yc1, track.yc2, yfcones) ) ) )
     xcones = xcones.T
     ycones = np.ones( (ncones,) )
 
@@ -47,11 +53,8 @@ def planTrajectory( track, camera, x0 = np.array([0.,0.]),
 
     # color of cones
     rightCones = np.hstack( ( np.zeros( (len(track.xc1),), dtype=bool ),
-                              np.ones(  (len(track.xc2),), dtype=bool ) ) )
-
-    # Always start with the two cones next to the starting point (get those for free)
-    detCones[-1] = True
-    detCones[len(track.xc1)-1] = True
+                              np.ones(  (len(track.xc2),), dtype=bool ),
+                              rfcones ) )
 
     xtraj = np.zeros( (0,2) )
 

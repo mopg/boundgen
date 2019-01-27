@@ -7,7 +7,10 @@ from camera import *
 
 def plotDetection( xpos, nvec, xtraj, ytraj, track, camera,
                    cameraAct = True,
-                   visHist = np.zeros( (0, ), dtype=bool ) ):
+                   visHist = np.zeros( (0, ), dtype=bool ),
+                   xfcones = np.zeros( (0, ) ),
+                   yfcones = np.zeros( (0, ) ),
+                   rfcones = np.zeros( (0, ), dtype=bool ) ):
     '''
         Plots results from planning phase.
         'xpos' is the final position for which the active cones
@@ -27,16 +30,22 @@ def plotDetection( xpos, nvec, xtraj, ytraj, track, camera,
     plt.plot(track.xb1,track.yb1,linewidth=2,color='k')
     plt.plot(track.xb2,track.yb2,linewidth=2,color='k')
 
-    plt.plot( track.xc1, track.yc1, 'ko', fillstyle='none' )
-    plt.plot( track.xc2, track.yc2, 'ko', fillstyle='none' )
+    plt.plot( track.xc1, track.yc1, 'ko', markersize=6, fillstyle='none' )
+    plt.plot( track.xc2, track.yc2, 'ko', markersize=6, fillstyle='none' )
+    plt.plot( xfcones, yfcones, 'ro', markersize=6, fillstyle='none' )
 
     # plot trajectory
     if len(xtraj) > 0:
         plt.plot( xtraj, ytraj, linewidth=1,color='m' )
 
     # compute visible cones
-    xcones = np.vstack( [ np.hstack( [ track.xc1, track.xc2 ] ),
-                          np.hstack( [ track.yc1, track.yc2 ] ) ] )
+    rightcones = np.hstack( [ np.zeros( (len(track.xc1),), dtype=bool ),
+                              np.ones( (len(track.xc2),), dtype=bool ),
+                              rfcones ] )
+    leftcones  = np.invert( rightcones )
+
+    xcones = np.vstack( [ np.hstack( [ track.xc1, track.xc2, xfcones ] ),
+                          np.hstack( [ track.yc1, track.yc2, yfcones ] ) ] )
     xcones = xcones.T
 
     vis = camera.checkVisible( xcones, nvec, xpos )
@@ -46,18 +55,24 @@ def plotDetection( xpos, nvec, xtraj, ytraj, track, camera,
     # finish plotting
     #   plot history of cone detections
     if (np.shape( visHist )[0] > 0):
-        plt.plot( xcones[visHist,0], xcones[visHist,1], 'ko' )
+        lvishist = np.logical_and( visHist, leftcones )
+        rvishist = np.logical_and( visHist, rightcones )
+        plt.plot( xcones[lvishist,0], xcones[lvishist,1], 'bo', markersize=4 )
+        plt.plot( xcones[rvishist,0], xcones[rvishist,1], 'yo', markersize=4 )
 
     #   plot camera and active cone detection
     if cameraAct:
         plt.fill( xcam, ycam, 'g', alpha=0.25)
-        plt.plot( xcones[vis,0], xcones[vis,1], 'ro' )
+        plt.plot( xcones[vis,0], xcones[vis,1], 'go', fillstyle='none', markersize=9 )
 
     # plot car
     xcar, ycar = carOutline( xcar = xpos, nvec = nvec, scl = 2. )
     plt.fill( xcar, ycar, 'k')
 
     plt.axis('equal')
+
+    plt.axis('off')
+
     plt.show()
 
 def carOutline( xcar = np.array([0.,0.]),
@@ -79,7 +94,11 @@ def carOutline( xcar = np.array([0.,0.]),
     return (xc,yc)
 
 def animateDetection( xtraj, ytraj, track, camera, output=True,
-                      filename="img/track1.gif" ):
+                      xfcones = np.zeros( (0, ) ),
+                      yfcones = np.zeros( (0, ) ),
+                      rfcones = np.zeros( (0, ), dtype=bool ),
+                      filename="img/track1.gif",
+                      dpi=150 ):
     '''
         Animates the detection process (after the fact,
         so active cones are re-computed).
@@ -90,14 +109,14 @@ def animateDetection( xtraj, ytraj, track, camera, output=True,
 
     # initialize figure window
     if output:
-        fig = plt.figure(dpi=225)
+        fig = plt.figure(dpi=dpi)
     else:
         fig = plt.figure()
 
-    xmin = 1.1 * min( np.min(track.xc1), np.min(track.xc2) ) - 2.
-    xmax = 1.1 * max( np.max(track.xc1), np.max(track.xc2) ) + 2.
-    ymin = 1.1 * min( np.min(track.yc1), np.min(track.yc2) ) - 2.
-    ymax = 1.1 * max( np.max(track.yc1), np.max(track.yc2) ) + 2.
+    xmin = 1.2 * min( np.min(track.xc1), np.min(track.xc2) ) - 3.
+    xmax = 1.2 * max( np.max(track.xc1), np.max(track.xc2) ) + 3.
+    ymin = 1.2 * min( np.min(track.yc1), np.min(track.yc2) ) - 3.
+    ymax = 1.2 * max( np.max(track.yc1), np.max(track.yc2) ) + 3.
     ax1 = plt.axes(xlim=(xmin, xmax), ylim=(ymin,ymax))
 
     lines = []
@@ -113,16 +132,23 @@ def animateDetection( xtraj, ytraj, track, camera, output=True,
     ax1.plot(track.xb1,track.yb1,linewidth=2,color='k')
     ax1.plot(track.xb2,track.yb2,linewidth=2,color='k')
 
-    ax1.plot( track.xc1, track.yc1, 'ko', fillstyle='none' )
-    ax1.plot( track.xc2, track.yc2, 'ko', fillstyle='none' )
+    ax1.plot( track.xc1, track.yc1, 'ko', markersize=6, fillstyle='none' )
+    ax1.plot( track.xc2, track.yc2, 'ko', markersize=6, fillstyle='none' )
+    if len(xfcones):
+        ax1.plot( xfcones, yfcones, 'ro', markersize=6, fillstyle='none' )
 
     # prepare cones
-    xcones = np.vstack( [ np.hstack( [ track.xc1, track.xc2 ] ),
-                          np.hstack( [ track.yc1, track.yc2 ] ) ] )
+    xcones = np.vstack( [ np.hstack( [ track.xc1, track.xc2, xfcones ] ),
+                          np.hstack( [ track.yc1, track.yc2, yfcones ] ) ] )
     xcones = xcones.T
 
     vis     = np.zeros( (np.shape(xcones)[0], ), dtype=bool )
     vishist = np.zeros( (np.shape(xcones)[0], ), dtype=bool )
+
+    rightcones = np.hstack( [ np.zeros( (len(track.xc1),), dtype=bool ),
+                              np.ones( (len(track.xc2),), dtype=bool ),
+                              rfcones ] )
+    leftcones  = np.invert( rightcones )
 
     # prepare plots
     #   trajectory
@@ -133,12 +159,16 @@ def animateDetection( xtraj, ytraj, track, camera, output=True,
     carfill = ax1.fill( [], [], 'k')[0]
     lines.append(carfill)
 
-    #   history cones
-    histcones = ax1.plot( [], [], 'ko' )[0]
+    #   history cones - left
+    histcones = ax1.plot( [], [], 'bo', markersize=4 )[0]
+    lines.append(histcones)
+
+    #   history cones - right
+    histcones = ax1.plot( [], [], 'yo', markersize=4 )[0]
     lines.append(histcones)
 
     #   active cones
-    actcones = ax1.plot( [], [], 'ro' )[0]
+    actcones = ax1.plot( [], [], 'go', markersize=9, fillstyle='none' )[0]
     lines.append(actcones)
 
     #   camera outline
@@ -163,12 +193,19 @@ def animateDetection( xtraj, ytraj, track, camera, output=True,
         vis = camera.checkVisible( xcones, nvec, xpos )
         xcam, ycam = camera.getOutline( nvec, xpos )
 
+        # booleans
+        lvishist = np.logical_and( vishist, leftcones )
+        rvishist = np.logical_and( vishist, rightcones )
+
         # update plots
         lines[0].set_data( xtraj[0:i+1], ytraj[0:i+1] )
         lines[1].set_xy( np.vstack( (xcar, ycar) ).T )
-        lines[2].set_data( xcones[vishist,0], xcones[vishist,1] )
-        lines[3].set_data( xcones[vis,0], xcones[vis,1] )
-        lines[4].set_xy( np.vstack( (xcam, ycam) ).T )
+
+        lines[2].set_data( xcones[lvishist,0], xcones[lvishist,1] )
+        lines[3].set_data( xcones[rvishist,0], xcones[rvishist,1] )
+
+        lines[4].set_data( xcones[vis,0], xcones[vis,1] )
+        lines[5].set_xy( np.vstack( (xcam, ycam) ).T )
 
         vishist[vis] = True
 
@@ -176,6 +213,8 @@ def animateDetection( xtraj, ytraj, track, camera, output=True,
 
     anim = animation.FuncAnimation(fig, animate, init_func=init,
                                    frames=len(xtraj)-1, interval=10, blit=True)
+
+    plt.axis('off')
 
     if output:
         anim.save(filename, fps=30)
