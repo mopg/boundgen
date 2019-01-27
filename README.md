@@ -34,7 +34,9 @@ Algorithm handles false positives well, but note that:
 
 Clean detection with no color information used for planning (`Pcolcorr=0.51`):
 <img src="img/track1.gif" alt="Example of planning and detection (no color information used)" width="500">
+
 30% false cone detections with no color information used for planning (`Pcolcorr=0.51`):
 <img src="img/track1_lowFP.gif" alt="Example of planning and detection with 30% false positives (no color information used)" width="500">
+
 90% false cone detections with color information used for planning (`Pcolcorr=0.75`):
 <img src="img/track1_highFP.gif" alt="Example of planning and detection with 90% false positives (color information used, Pcolcorr=0.75)" width="500">
