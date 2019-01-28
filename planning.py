@@ -9,7 +9,8 @@ def planTrajectory( track, camera, x0 = np.array([0.,0.]),
                     nsamples = 25,
                     xfcones = np.zeros( (0,) ),
                     yfcones = np.zeros( (0,) ),
-                    rfcones = np.zeros( (0,), dtype=bool ) ):
+                    rfcones = np.zeros( (0,), dtype=bool ),
+                    seed=None ):
 
     '''
         Plans a trajectory starting from 'x0'. In this algorithm detection and
@@ -31,6 +32,7 @@ def planTrajectory( track, camera, x0 = np.array([0.,0.]),
             - xfcones:      x-coordinates of stationary false cone detections
             - yfcones:      y-coordinates of stationary false cone detections
             - rfcones:      are stationary cones detected as right (true) or left (false) cones?
+            - seed:         random seed used to generate colors with probability `Pcolcorr`
     '''
 
     x    = x0.copy()
@@ -52,8 +54,9 @@ def planTrajectory( track, camera, x0 = np.array([0.,0.]),
     detCones = np.zeros( (ncones,) , dtype=bool )
 
     # color of cones
-    rightCones = np.hstack( ( np.zeros( (len(track.xc1),), dtype=bool ),
-                              np.ones(  (len(track.xc2),), dtype=bool ),
+    np.random.seed( seed=seed )
+    rightCones = np.hstack( ( np.random.choice( a=[False,True], size=len(track.xc1), p=[Pcolcorr,1-Pcolcorr] ),
+                              np.random.choice( a=[True,False], size=len(track.xc2), p=[Pcolcorr,1-Pcolcorr] ),
                               rfcones ) )
 
     xtraj = np.zeros( (0,2) )
@@ -148,4 +151,4 @@ def planTrajectory( track, camera, x0 = np.array([0.,0.]),
         # add to trajectory
         xtraj = np.vstack( (xtraj, x) )
 
-    return xtraj, detCones
+    return xtraj, detCones, rightCones

@@ -28,7 +28,7 @@ Several hyperparameters can be tuned to get better results. The algorithm seems 
 ## False positives
 Algorithm handles false positives well, but note that:
 1. As in the clean case, accurate color detection has a large influence.
-2. If a lot of false cone detections happen near a point where two track segments come close together, expect problems unless you have good color detection (i.e., better than ~70% success rate for color detection).
+2. If a lot of false cone detections happen near a point where two track segments come close together, expect problems unless you have good color detection.
 
 ## Example of planning and detection
 
@@ -38,5 +38,5 @@ Clean detection with no color information used for planning (`Pcolcorr=0.51`):
 30% false cone detections with no color information used for planning (`Pcolcorr=0.51`):
 <img src="img/track1_lowFP.gif" alt="Example of planning and detection with 30% false positives (no color information used)" width="500">
 
-90% false cone detections with color information used for planning (`Pcolcorr=0.75`):
-<img src="img/track1_highFP.gif" alt="Example of planning and detection with 90% false positives (color information used, Pcolcorr=0.75)" width="500">
+90% false cone detections with color information used for planning (`Pcolcorr=0.98`):
+<img src="img/track1_highFP.gif" alt="Example of planning and detection with 90% false positives (color information used, Pcolcorr=0.98)" width="500">

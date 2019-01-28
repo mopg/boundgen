@@ -8,6 +8,7 @@ from camera import *
 def plotDetection( xpos, nvec, xtraj, ytraj, track, camera,
                    cameraAct = True,
                    visHist = np.zeros( (0, ), dtype=bool ),
+                   rcones  = np.zeros( (0, ) ),
                    xfcones = np.zeros( (0, ) ),
                    yfcones = np.zeros( (0, ) ),
                    rfcones = np.zeros( (0, ), dtype=bool ) ):
@@ -39,9 +40,10 @@ def plotDetection( xpos, nvec, xtraj, ytraj, track, camera,
         plt.plot( xtraj, ytraj, linewidth=1,color='m' )
 
     # compute visible cones
-    rightcones = np.hstack( [ np.zeros( (len(track.xc1),), dtype=bool ),
-                              np.ones( (len(track.xc2),), dtype=bool ),
-                              rfcones ] )
+    if len(rcones) == 0:
+        rcones = np.hstack( [ np.zeros( (len(track.xc1),), dtype=bool ),
+                                  np.ones( (len(track.xc2),), dtype=bool ) ] )
+    rightcones = np.hstack( [ rcones, rfcones ] )
     leftcones  = np.invert( rightcones )
 
     xcones = np.vstack( [ np.hstack( [ track.xc1, track.xc2, xfcones ] ),
@@ -94,6 +96,7 @@ def carOutline( xcar = np.array([0.,0.]),
     return (xc,yc)
 
 def animateDetection( xtraj, ytraj, track, camera, output=True,
+                      rcones = np.zeros( (0, ) ),
                       xfcones = np.zeros( (0, ) ),
                       yfcones = np.zeros( (0, ) ),
                       rfcones = np.zeros( (0, ), dtype=bool ),
@@ -144,10 +147,13 @@ def animateDetection( xtraj, ytraj, track, camera, output=True,
 
     vis     = np.zeros( (np.shape(xcones)[0], ), dtype=bool )
     vishist = np.zeros( (np.shape(xcones)[0], ), dtype=bool )
-
-    rightcones = np.hstack( [ np.zeros( (len(track.xc1),), dtype=bool ),
+    if len(rcones) == 0:
+        rightcones = np.hstack( [ np.zeros( (len(track.xc1),), dtype=bool ),
                               np.ones( (len(track.xc2),), dtype=bool ),
                               rfcones ] )
+    else:
+        rightcones = rcones.copy()
+
     leftcones  = np.invert( rightcones )
 
     # prepare plots

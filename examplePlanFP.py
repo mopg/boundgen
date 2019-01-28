@@ -12,16 +12,16 @@ track   = datdict['track']
 
 camera = FOV( rad = 7., distcent = 3 )
 
-xfc, yfc, rfc = genFalsePositives( track, sigmadist = 2.0, percFP=0.3, seed=101 )
+xfc, yfc, rfc = genFalsePositives( track, sigmadist = 2.0, percFP=0.9, seed=101 )
 
 x0   = np.array([0.,0.])
 nvec = np.array([-1.,0.])
-xtraj, detCones = planTrajectory( track, camera, x0 = x0,
-                                  nvec0 = nvec, sdetectmax = 15.,
-                                  ds = .5, smax = track.length,
-                                  rmin=2.5, sigmabar = 0.1,
-                                  alpha = 0.15, Pcolcorr=0.51,
-                                  xfcones=xfc, yfcones=yfc, rfcones=rfc )
+xtraj, detCones, rCones = planTrajectory( track, camera, x0 = x0,
+                                          nvec0 = nvec, sdetectmax = 15.,
+                                          ds = .5, smax = track.length,
+                                          rmin=2.5, sigmabar = 0.1,
+                                          alpha = 0.15, Pcolcorr=0.98,
+                                          xfcones=xfc, yfcones=yfc, rfcones=rfc, seed=100 )
 
 ind = np.shape(xtraj)[0]-1
 xplot = xtraj[ind,:]
@@ -35,5 +35,6 @@ nvec /= np.linalg.norm(nvec)
 #                xfcones=xfc, yfcones=yfc, rfcones=rfc );
 
 # animation
-animateDetection( xtraj[:,0], xtraj[:,1], track, camera, output=True,
-                  xfcones=xfc, yfcones=yfc, rfcones=rfc, filename="img/track1_lowFP.gif", dpi=100 )
+animateDetection( xtraj[:,0], xtraj[:,1], track, camera, output=False,
+                  xfcones=xfc, yfcones=yfc, rfcones=rfc,
+                  rcones=rCones )
