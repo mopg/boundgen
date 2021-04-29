@@ -2,8 +2,6 @@ import numpy as np
 from math import *
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
-from trackgen import *
-from camera import *
 
 def plotDetection( xpos, nvec, xtraj, ytraj, track, camera,
                    cameraAct = True,

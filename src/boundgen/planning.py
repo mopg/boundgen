@@ -1,5 +1,5 @@
 import numpy as np
-from camera import *
+from math import acos, exp, sqrt, pi, cos, sin
 
 def planTrajectory( track, camera, x0 = np.array([0.,0.]),
                     nvec0 = np.array([1.,0.]),

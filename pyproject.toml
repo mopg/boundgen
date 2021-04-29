@@ -1,0 +1,7 @@
+requires = [
+    "numpy",
+    "math",
+    "matplotlib",
+    "scipy",
+]
+build-backend = "setuptools.build_meta"

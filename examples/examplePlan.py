@@ -1,11 +1,8 @@
 import numpy as np
 from math import *
-from trackgen import *
-from camera import *
-from vis import *
-from planning import *
+from boundgen import plotDetection, planTrajectory, animateDetection, FOV
 
-# load the previously generated track (using exampleTrack.py)
+# load the previously generated track (using generateExampleTrack.py)
 datdict = np.load('track1.npy').item()
 track   = datdict['track']
 
